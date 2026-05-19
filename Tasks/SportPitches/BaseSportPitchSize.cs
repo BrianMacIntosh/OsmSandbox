@@ -53,7 +53,7 @@ namespace Sandbox.Tasks
 			Command command = base.CreateSubcommand();
 			command.Options.Add(new Option<FileInfo>(ARG_IN)
 			{
-				Description = "Path to an input GeoJSON file containing unfiltered areas.",
+				Description = "Path to an input GeoJSON file or directory of files containing unfiltered areas.",
 				Required = true
 			});
 			command.Options.Add(new Option<FileInfo>(ARG_OUT)
@@ -69,7 +69,17 @@ namespace Sandbox.Tasks
 			outputCollection.timestamp = DateTime.Now.ToString("O");
 
 			FileInfo inFile = args.GetValue<FileInfo>(ARG_IN);
-			ProcessFile(inFile);
+			if (inFile.Exists)
+			{
+				ProcessFile(inFile);
+			}
+			else if (Directory.Exists(inFile.FullName))
+			{
+				foreach (string file in Directory.GetFiles(inFile.FullName, "*.geojson", SearchOption.TopDirectoryOnly))
+				{
+					ProcessFile(new FileInfo(file));
+				}
+			}
 
 			FileInfo outFile = args.GetValue<FileInfo>(ARG_OUT);
 			if (outFile == null)
